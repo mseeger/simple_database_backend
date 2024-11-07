@@ -1,1 +1,3 @@
-# simple_database_backend
+# Simple Java Backend with Database
+
+I am trying to learn some things here.
