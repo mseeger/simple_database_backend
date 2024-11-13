@@ -181,15 +181,15 @@ Find out / sanity check:
 
 Interesting queries:
 
-* For a store: Which inventory items are in stock, and how often? Include
-  relevant attributes to be shown to a customer.
+* For a store and a certain timestamp: Which films are in stock,
+  and how often? Include relevant attributes to be shown to a customer.
+  The view `film_in_stock` goes along this direction.
 * For a customer: Which inventory items do they currently rent, and when is
   each due? Are any items past their return date? What are charges for late
   returns (assuming these are determined by `film.rental_duration` and
   `film.rental_rate`)?
-* For a staff member and time period: What is the sum of rental rates for
-  inventory in rentals processed by this member? This is quite different from
-  the `sales_by_store` view.
+* List customers along with films they rented, official due date, overdue
+  fees (if any). Overdue fees per customer by group-by.
 * List name and complete address (including city, country) for all customers.
   This is provided by `customer_list` view.
 * Display complete information for films. This is provided by `film_list` view.
@@ -198,20 +198,34 @@ Interesting queries:
   total rental time in days and total rental costs, as well as category and
   other relevant attributes. This information can be used for recommendation.
 
-Interesting updates:
+Interesting update tasks:
 
 * Customer is registered with the company: Create row in `customer`, as well
   as other tables like `address`. Only registered customers can rent items.
-* Customer rents film in a store: Create row in `rental`. Need to find an
-  inventory item in stock. We can assume that the customer pays immediately,
-  inserting a row in `payment` as well.
-* Customer returns inventory in a store: Update `rental.return_date`. For late
-  returns, could charge fees, which leads to new rows in `payment`.
+* Customer rents one or more films in a store:
+  - List films which are in stock
+  - Customer can select one or more films
+  - New rows in `rental`. Have to confirm all chosen inventory is in-stock before
+    writing, in atomic operation (locking?)
+  - Customer is charged `film.rental_rate`
+* Customer returns films in a store:
+  - List which films customer has rented, when they are due, whether they are
+    overdue, and if so, what overdue fees are
+  - Customer can select which items to return
+  - Update of `rental.return_date`
+  - Customer is charged overdue fees for items returned (if any): Update of
+    `payment`
+
+  **Note**: This is not what happens in `payment`, where customer is charged
+  full amount up front. Makes no sense, unless customer rents film for longer
+  than `film.rental_duration` up front.
+
+  **Note**: Alternative is to force customer to return overdue films. But that
+  sounds intrusive.
 * Add inventory item in some store. This could be for an existing film, or for
   a new one. In the latter case, attributes need to be inserted into other
   tables.
-* A staff member is hired.
-* A staff member leaves; a staff members transfers from one store to another.
+* Portal for HR: Hiring and leave of staff members
 
 An advanced feature would be approximate matches for entries such as address
 (customer, staff member) or title (film). This could also be done as clean-up
@@ -219,4 +233,32 @@ operations, which merge rows in the respective tables.
 
 Finally, a really advanced extra idea would be to use Gen AI in order to create
 posters for films, depending on their attributes (description, category,
-actors). Note that films and actor names are made up. We could 
+actors). Note that film titles and actor names are made up.
+
+### Employees
+
+Details are [here](https://dev.mysql.com/doc/employee/en/).
+
+The Employees database is larger, but has less tables and a simpler structure
+than Sakila. It consists of 6 tables with more than 4 millions rows in total.
+One characteristic of this database is that some of the tables have composite
+primary keys (whereas in Sakila, each table `xyz` has a separate primary key
+`xyz_id`).
+
+Tables:
+* `employees`: Name, gender, birth date, hire date
+* `departments`: Name
+* `dept_emp`: Joins `employees`, `departments`. From date, to date
+* `dept_manager`: Joins `employees`, `departments`. From date, to date. Need
+  not be a subset of rows of `dept_emp`: an employee could work in a
+  department, then become a manager there later
+* `titles`: Job roles of employees. Title, date range. An employee can have
+  different titles through their tenure
+* `salaries`: Salaries of employees. Salary, date range. An employee can have
+  different salaries through their tenure
+
+This is purely an HR database, focussing on employees in different departments
+and their attributes, such as job title or salary. Tasks could be:
+* Employee joins, leaves, changes department
+* Employee is promoted to different title, maybe to be manager
+* Employee gets salary rise
