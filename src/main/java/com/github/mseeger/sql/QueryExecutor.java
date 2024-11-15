@@ -3,7 +3,6 @@ package com.github.mseeger.sql;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.List;
 
 public class QueryExecutor<T> {
     private final ConnectionConfig connectionConfig;
@@ -14,13 +13,15 @@ public class QueryExecutor<T> {
 
     /**
      * Executes SQL query and returns result set as list of `T`.
+     * <p>
+     * We create a new connection for each call here. This is inefficient, since
+     * `DriverManager` does not provide connection pooling.
      *
      * @param query SQL query
      * @param rowMapper Maps result set rows to entity objects of type `T`
      * @return Result list of entity objects
-     * @throws SQLException
      */
-    public List<T> run(SQLQuery query, RowMapper<T> rowMapper) throws SQLException {
+    public ArrayList<T> run(SQLQuery query, RowMapper<T> rowMapper) throws SQLException {
         ArrayList<T> resultList;
         try (
                 var connection = DriverManager.getConnection(

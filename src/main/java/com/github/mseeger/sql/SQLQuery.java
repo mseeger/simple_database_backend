@@ -5,11 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public abstract class SQLQuery {
-    private final String queryString;
-
-    SQLQuery(String queryString) {
-        this.queryString = queryString;
-    }
+    protected abstract String getQueryString();
 
     /**
      * If the query string contains slots "?", this method imputes values for
@@ -17,7 +13,7 @@ public abstract class SQLQuery {
      *
      * @param statement Imputes values for free slots in this statement
      */
-    protected abstract void imputeParameters(PreparedStatement statement);
+    protected abstract void imputeParameters(PreparedStatement statement) throws SQLException;
 
     /**
      * Creates prepared statement from query string and imputes values for
@@ -26,7 +22,7 @@ public abstract class SQLQuery {
      * @param connection Connection
      */
     public PreparedStatement getStatement(Connection connection) throws SQLException {
-        var statement = connection.prepareStatement(queryString);
+        var statement = connection.prepareStatement(getQueryString());
         imputeParameters(statement);
         return statement;
     }
