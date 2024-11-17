@@ -1,5 +1,7 @@
 package com.github.mseeger.sql;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,11 +20,18 @@ class EntityToRecordConverter {
     private final EntityField[] fields;
 
     /**
-     * @param entityType Entity class aaa
+     * If `this.fields` is determined by reflection, the ordering of entries
+     * is not defined. But if `entityType` has a static `String[]` field named
+     * `columnNames`, these column names are used in this ordering.
+     *
+     * @param entityType Entity class
      * @param formats Maps certain field names to format strings. For all other
      *                fields, the default conversion is used
      */
-    public EntityToRecordConverter(Class<?> entityType, Map<String, String> formats) {
+    public EntityToRecordConverter(
+            Class<?> entityType,
+            Map<String, String> formats
+    ) {
         this.entityType = entityType;
         this.fields = createFields(entityType, formats);
     }
@@ -41,6 +50,36 @@ class EntityToRecordConverter {
             }
         }
         return result.toArray(new EntityField[0]);
+    }
+
+    /**
+     * Checks for static `columnNames` field in `entityType`. If given, this
+     * determines the column names and their ordering.
+     */
+    private EntityField[] postProcessFields(
+            Class<?> entityType,
+            ArrayList<EntityField> fields
+    ) {
+        String[] columnNames = columnNamesByReflection(entityType);
+        if (columnNames != null) {
+            ArrayList<EntityField> newfields = new ArrayList<>();
+            // HIER!!
+        }
+        return fields.toArray(new EntityField[0]);
+    }
+
+    private String[] columnNamesByReflection(Class<?> entityType) {
+        String[] columnNames = null;
+        try {
+            Field field = entityType.getField("columnNames");
+            if (
+                    Modifier.isStatic(field.getModifiers()) &&
+                    field.getType() == String[].class
+            ) {
+                columnNames = (String[]) field.get(null);
+            }
+        } catch (NoSuchFieldException | IllegalAccessException _) {}
+        return columnNames;
     }
 
     public String[] getFieldNames() {

@@ -1,6 +1,12 @@
 package com.github.mseeger.sql.queries;
 
 public class FilmsInStock {
+    public static final String[] columnNames = {
+            "filmID",
+            "title",
+            "numInStock"
+    };
+
     private final int filmID;
     private final String title;
     private final int numInStock;

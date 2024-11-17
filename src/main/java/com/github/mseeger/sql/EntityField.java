@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 
 public class EntityField {
-    private static final String defaultFloatFormat = ".2f";
+    private static final String defaultFloatFormat = "%.2f";
 
     private final String name;
     private final Method getter;
@@ -28,12 +28,18 @@ public class EntityField {
     private EntryToStringConverter createConverter(Method getter, String format) {
         if (format == null) {
             var fieldType = getter.getReturnType();
-            if (fieldType == Float.class
+            System.out.printf("%s: %s\n", getter.getName(), fieldType);
+            if (fieldType == float.class
+                    || fieldType == double.class
+                    || fieldType == short.class
+                    || fieldType == Float.class
                     || fieldType == Double.class
                     || fieldType == Short.class
                     || fieldType == BigDecimal.class
-            )
+            ) {
+                System.out.println("FLOAT!");
                 format = defaultFloatFormat;
+            }
         }
         if (format == null)
             return new DefaultEntryToStringConverter();
