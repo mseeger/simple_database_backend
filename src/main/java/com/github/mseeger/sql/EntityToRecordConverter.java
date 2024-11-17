@@ -5,6 +5,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.stream.Stream;
 
 /**
@@ -49,7 +50,7 @@ class EntityToRecordConverter {
                 result.add(new EntityField(method, format));
             }
         }
-        return result.toArray(new EntityField[0]);
+        return postProcessFields(entityType, result);
     }
 
     /**
@@ -62,8 +63,18 @@ class EntityToRecordConverter {
     ) {
         String[] columnNames = columnNamesByReflection(entityType);
         if (columnNames != null) {
-            ArrayList<EntityField> newfields = new ArrayList<>();
-            // HIER!!
+            ArrayList<EntityField> newFields = new ArrayList<>();
+            for (var name : columnNames) {
+                var field = fields.stream()
+                        .filter(elem -> elem.getName().equals(name))
+                        .findFirst();
+                newFields.add(
+                        field.orElseThrow(
+                                () -> new NoSuchElementException("columnNames entry '" + name + "' is no entity field")
+                        )
+                );
+            }
+            fields = newFields;
         }
         return fields.toArray(new EntityField[0]);
     }

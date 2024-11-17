@@ -28,7 +28,6 @@ public class EntityField {
     private EntryToStringConverter createConverter(Method getter, String format) {
         if (format == null) {
             var fieldType = getter.getReturnType();
-            System.out.printf("%s: %s\n", getter.getName(), fieldType);
             if (fieldType == float.class
                     || fieldType == double.class
                     || fieldType == short.class
@@ -36,10 +35,8 @@ public class EntityField {
                     || fieldType == Double.class
                     || fieldType == Short.class
                     || fieldType == BigDecimal.class
-            ) {
-                System.out.println("FLOAT!");
+            )
                 format = defaultFloatFormat;
-            }
         }
         if (format == null)
             return new DefaultEntryToStringConverter();

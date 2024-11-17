@@ -87,6 +87,15 @@ public class TableFormatter {
 
     public static void main(String[] args) {
         class MyEntity {
+            public static final String[] columnNames = {
+                    "userID",
+                    "lastName",
+                    "birthDate",
+                    "timeStamp",
+                    "salary",
+                    "x"
+            };
+
             private final int userID;
             private final String lastName;
             private final LocalDate birthDate;
